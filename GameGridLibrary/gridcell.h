@@ -12,7 +12,7 @@ typedef std::map<std::type_index, std::shared_ptr<CellComponent>> ComponentMap;
 class GridCell
 {
 public:
-    GridCell();
+    GridCell(int x = 0, int y = 0);
 
     const ComponentMap &components() const { return m_components; }
 
@@ -30,9 +30,17 @@ public:
         return std::static_pointer_cast<T>(component);
     };
 
+    int x() const { return m_x; }
+    void setX(int newX);
+
+    int y() const { return m_y; }
+    void setY(int newY);
+
 private:
     /// \note We map the components by type_index, but for the interface we use template arguments which are much easier to read and include
     ComponentMap m_components;
+    int m_x;
+    int m_y;
 };
 
 #endif // GRIDCELL_H

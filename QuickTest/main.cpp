@@ -45,7 +45,6 @@ void addCell(int x, int y, GameGrid &grid, int c = 1)
 {
     std::cout << "addCell() adding cell at " << x << ',' << y << std::endl;
     grid.addCell(x, y);
-    std::cout << "addCell() added cell at " << x << ',' << y << std::endl;
     if (c < 1)
         return; // EXIT: Don't add components
 
@@ -53,6 +52,8 @@ void addCell(int x, int y, GameGrid &grid, int c = 1)
     if (!cell) {
         std::cout << "Failed to get cell at " << x << ',' << y << std::endl;
     }
+    std::cout << "addCell() added cell at (" << cell->x() << ',' << cell->y() << ')' << std::endl;
+
     cell->addComponent(std::make_shared<FirstComponent>());
     if (!cell->getComponent<FirstComponent>()) {
         std::cout << "Failed to retrieve FirstComponent from " << x << ',' << y << std::endl;

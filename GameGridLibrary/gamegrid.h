@@ -37,7 +37,7 @@ private:
     void prependColumn();
     void appendRow();
     void prependRow();
-    std::shared_ptr<CellRow> buildRow();
+    std::shared_ptr<CellRow> buildRow(int y);
 
     bool m_allowEmptyCells;
     int m_width, m_height;

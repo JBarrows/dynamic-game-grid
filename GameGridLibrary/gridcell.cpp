@@ -4,7 +4,9 @@
 #include <iostream>
 #include <typeinfo>
 
-GridCell::GridCell()
+GridCell::GridCell(int x, int y)
+    : m_x(x)
+    , m_y(y)
 {
 
 }
@@ -20,4 +22,12 @@ bool GridCell::addComponent(std::shared_ptr<CellComponent> component)
     std::shared_ptr<CellComponent> shared(component);
     m_components[typeId] = shared;
     return true;
+}
+
+void GridCell::setX(int newX) {
+    m_x = newX;
+}
+
+void GridCell::setY(int newY) {
+    m_y = newY;
 }
