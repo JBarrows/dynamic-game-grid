@@ -11,7 +11,10 @@ class GameGrid
 
 public:
     GameGrid();
-    GameGrid(bool allowEmptyCells);
+    GameGrid(bool allowNullCells);
+
+    bool allowNullCells() const { return m_allowNullCells; }
+    void setAllowNullCells(bool newAllowNullCells);
 
     int width() const;
     int height() const;
@@ -33,6 +36,7 @@ public:
 private:
     void setWidth(int newWidth);
     void setHeight(int newHeight);
+
     void appendColumn();
     std::shared_ptr<GridCell> appendColumn(std::shared_ptr<GridCell> cell, int targetY);
     void prependColumn();
@@ -45,7 +49,7 @@ private:
     void prependRow();
     std::shared_ptr<GridCell> prependRow(std::shared_ptr<GridCell> cell, int targetX);
 
-    bool m_allowEmptyCells;
+    bool m_allowNullCells;
     int m_width, m_height;
     int m_xOffset, m_yOffset;
 

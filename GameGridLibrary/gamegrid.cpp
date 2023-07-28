@@ -3,25 +3,32 @@
 #include "gamegrid.h"
 
 GameGrid::GameGrid()
-    : m_allowEmptyCells(false)
+    : m_allowNullCells(false)
     , m_width(0), m_height(0)
     , m_xOffset(0), m_yOffset(0)
 {
     addCell(0, 0);
 }
 
-GameGrid::GameGrid(bool allowEmptyCells)
-    : m_allowEmptyCells(allowEmptyCells)
+GameGrid::GameGrid(bool allowNullCells)
+    : m_allowNullCells(allowNullCells)
     , m_width(0), m_height(0)
     , m_xOffset(0), m_yOffset(0)
 {
-    if (allowEmptyCells) {
+    if (allowNullCells) {
         // Begin with a null cell
         addCell(0, 0, nullptr);
     } else {
         // Begin with a cell at 0,0
         addCell(0, 0);
     }
+}
+
+
+
+void GameGrid::setAllowNullCells(bool newAllowNullCells)
+{
+    m_allowNullCells = newAllowNullCells;
 }
 
 int GameGrid::width() const
@@ -75,7 +82,7 @@ void GameGrid::appendColumn()
     // Add cell to each row
     int y = minY();
     for(auto row : m_rows) {
-        if (m_allowEmptyCells) {
+        if (allowNullCells()) {
             row->push_back(std::shared_ptr<GridCell>());
         } else {
             auto newCell = std::make_shared<GridCell>(maxX(), y);
@@ -99,7 +106,7 @@ std::shared_ptr<GridCell> GameGrid::appendColumn(std::shared_ptr<GridCell> cell,
             // Add the given cell
             newCell = cell;
             targetCell = newCell;
-        } else if (m_allowEmptyCells) {
+        } else if (allowNullCells()) {
             // Add a null cell to pad out the grid (Technically this is already done)
             newCell = nullptr;
         } else {
@@ -122,7 +129,7 @@ void GameGrid::prependColumn()
     // Prepend cell to each row
     int y = minY();
     for(auto row : m_rows) {
-        if (m_allowEmptyCells) {
+        if (allowNullCells()) {
             row->push_front(std::shared_ptr<GridCell>());
         } else {
             row->push_front(std::make_shared<GridCell>(maxX(), y));
@@ -146,7 +153,7 @@ std::shared_ptr<GridCell> GameGrid::prependColumn(std::shared_ptr<GridCell> cell
             // Add the given cell
             newCell = cell;
             targetCell = newCell;
-        } else if (m_allowEmptyCells) {
+        } else if (allowNullCells()) {
             // Add a null cell to pad out the grid (Technically this is already done)
             newCell = nullptr;
         } else {
@@ -167,7 +174,7 @@ std::shared_ptr<GameGrid::CellRow> GameGrid::buildRow(int y)
 
     for (int i = minX(); i <= maxX(); ++i) {
         std::shared_ptr<GridCell> newCell;
-        if (!m_allowEmptyCells)
+        if (!allowNullCells())
             newCell = std::make_shared<GridCell>(i, y);
 
         newRow->push_back(newCell);
@@ -184,7 +191,7 @@ std::shared_ptr<GameGrid::CellRow> GameGrid::buildRow(std::shared_ptr<GridCell> 
         std::shared_ptr<GridCell> newCell;
         if (x == targetX) {
             newCell = cell;
-        } else if (m_allowEmptyCells) {
+        } else if (allowNullCells()) {
             // Add a null cell to pad out the grid (Technically this is already done)
             newCell = nullptr;
         } else {
@@ -249,7 +256,7 @@ std::shared_ptr<GridCell> GameGrid::addCell(int x, int y, const std::shared_ptr<
     }
 
     // Fist make sure that we have a row and cell to place this in
-    // if allowEmptyCells is disabled, cells will be created as the rows/columns are
+    // if allowNullCells is disabled, cells will be created as the rows/columns are
     while (x >= width() + m_xOffset) {
         if (x == width() + m_xOffset) {
             newCell = appendColumn(value, y);
