@@ -85,6 +85,36 @@ void GameGrid::appendColumn()
     }
 }
 
+std::shared_ptr<GridCell> GameGrid::appendColumn(std::shared_ptr<GridCell> cell, int targetY)
+{
+    std::shared_ptr<GridCell> targetCell;
+    setWidth(width() + 1);
+    // Append a cell to each row
+    int y = minY();
+    for (auto row : m_rows) {
+        std::shared_ptr<GridCell> newCell;
+
+        // Shared w/ prependColumn
+        if (y == targetY) {
+            // Add the given cell
+            newCell = cell;
+            targetCell = newCell;
+        } else if (m_allowEmptyCells) {
+            // Add a null cell to pad out the grid (Technically this is already done)
+            newCell = nullptr;
+        } else {
+            // Add a default cell to pad out the grid
+            newCell = std::make_shared<GridCell>(maxX(), y);
+        }
+        ++y;
+        // \shared
+
+        row->push_back(newCell);
+    }
+
+    return targetCell;
+}
+
 void GameGrid::prependColumn()
 {
     --m_xOffset;
@@ -101,33 +131,118 @@ void GameGrid::prependColumn()
     }
 }
 
+std::shared_ptr<GridCell> GameGrid::prependColumn(std::shared_ptr<GridCell> cell, int targetY)
+{
+    std::shared_ptr<GridCell> targetCell;
+    --m_xOffset;
+    setWidth(width() + 1);
+    // Prepend a cell to each row
+    int y = minY();
+    for(auto row : m_rows) {
+        std::shared_ptr<GridCell> newCell;
+
+        // Shared w/ appendColumn
+        if (y == targetY) {
+            // Add the given cell
+            newCell = cell;
+            targetCell = newCell;
+        } else if (m_allowEmptyCells) {
+            // Add a null cell to pad out the grid (Technically this is already done)
+            newCell = nullptr;
+        } else {
+            // Add a default cell to pad out the grid
+            newCell = std::make_shared<GridCell>(maxX(), y);
+        }
+        ++y;
+        // \shared
+
+        row->push_front(newCell);
+    }
+    return targetCell;
+}
+
 std::shared_ptr<GameGrid::CellRow> GameGrid::buildRow(int y)
 {
     std::shared_ptr<CellRow> newRow = std::make_shared<CellRow>();
-    for (int i = 0; i < width(); ++i) {
-        if (m_allowEmptyCells)
-            newRow->push_back(std::shared_ptr<GridCell>());
-        else
-            newRow->push_back(std::make_shared<GridCell>(i + m_xOffset, y));
+
+    for (int i = minX(); i <= maxX(); ++i) {
+        std::shared_ptr<GridCell> newCell;
+        if (!m_allowEmptyCells)
+            newCell = std::make_shared<GridCell>(i, y);
+
+        newRow->push_back(newCell);
     }
+
+    return newRow;
+}
+
+std::shared_ptr<GameGrid::CellRow> GameGrid::buildRow(std::shared_ptr<GridCell> cell, int targetX, int y, std::shared_ptr<GridCell> &outCell)
+{
+    std::shared_ptr<CellRow> newRow = std::make_shared<CellRow>();
+
+    for (int x = minX(); x <= maxX(); ++x) {
+        std::shared_ptr<GridCell> newCell;
+        if (x == targetX) {
+            newCell = cell;
+        } else if (m_allowEmptyCells) {
+            // Add a null cell to pad out the grid (Technically this is already done)
+            newCell = nullptr;
+        } else {
+            // Add a default cell to pad out the grid
+            newCell = std::make_shared<GridCell>(x, y);
+        }
+
+        newRow->push_back(newCell);
+        if (x == targetX) {
+            outCell = newCell;
+        }
+    }
+
     return newRow;
 }
 
 void GameGrid::appendRow()
 {
     setHeight(height() + 1);
-    m_rows.push_back(buildRow(maxY()));
+    auto newRow = buildRow(maxY());
+    m_rows.push_back(newRow);
+}
+
+std::shared_ptr<GridCell> GameGrid::appendRow(std::shared_ptr<GridCell> cell, int targetX)
+{
+    std::shared_ptr<GridCell> newCell;
+
+    setHeight(height() + 1);
+    auto newRow = buildRow(cell, targetX, maxY(), newCell);
+    m_rows.push_back(newRow);
+
+    return newCell;
 }
 
 void GameGrid::prependRow()
 {
     --m_yOffset;
     setHeight(height() + 1);
-    m_rows.push_front(buildRow(minY()));
+    auto newRow = buildRow(minY());
+    m_rows.push_front(newRow);
+}
+
+std::shared_ptr<GridCell> GameGrid::prependRow(std::shared_ptr<GridCell> cell, int targetX)
+{
+    std::shared_ptr<GridCell> newCell;
+
+    --m_yOffset;
+    setHeight(height() + 1);
+    auto newRow = buildRow(cell, targetX, minY(), newCell);
+    m_rows.push_front(newRow);
+
+    return newCell;
 }
 
 std::shared_ptr<GridCell> GameGrid::addCell(int x, int y, const std::shared_ptr<GridCell> value)
 {
+    std::shared_ptr<GridCell> newCell;
+
     if (value) {
         value->setX(x);
         value->setY(y);
@@ -136,30 +251,58 @@ std::shared_ptr<GridCell> GameGrid::addCell(int x, int y, const std::shared_ptr<
     // Fist make sure that we have a row and cell to place this in
     // if allowEmptyCells is disabled, cells will be created as the rows/columns are
     while (x >= width() + m_xOffset) {
-        appendColumn();
+        if (x == width() + m_xOffset) {
+            newCell = appendColumn(value, y);
+            // Can't return yet, the row may not exist
+        } else {
+            appendColumn();
+        }
     }
 
     while (x < m_xOffset) {
-        prependColumn();
+        if (x+1 == m_xOffset) {
+            newCell = prependColumn(value, y);
+            // Can't return yet, the row may not exist
+        } else {
+            prependColumn();
+        }
     }
 
     while (y >= height() + m_yOffset) {
-        appendRow();
+        if (y == height() + m_yOffset) {
+            newCell = appendRow(value, x);
+        } else {
+            appendRow();
+        }
     }
 
     while (y < m_yOffset) {
-        prependRow();
+        if (y+1 == m_yOffset) {
+            newCell = prependRow(value, x);
+        } else {
+            prependRow();
+        }
     }
 
+    if (newCell || !value)
+        return newCell;
+
+    // If we're still here, x,y were inside our bounds
     auto row = m_rows.at(y - m_yOffset);
     if (row) {
+        // Returning the input parameter stinks. We should probably clone the input cell or something
+        newCell = value;
         row->at(x - m_xOffset) = value;
+
+        return newCell;
     }
+
+    return nullptr;
 }
 
-void GameGrid::addCell(int x, int y)
+std::shared_ptr<GridCell> GameGrid::addCell(int x, int y)
 {
-    addCell(x, y, std::make_shared<GridCell>(x, y));
+    return addCell(x, y, std::make_shared<GridCell>(x, y));
 }
 
 std::shared_ptr<GridCell> GameGrid::getCell(int x, int y) const

@@ -43,26 +43,34 @@ void printGrid(GameGrid &grid)
 // Adds a cell to grid at x, y and adds c components to it
 void addCell(int x, int y, GameGrid &grid, int c = 1)
 {
-    std::cout << "addCell() adding cell at " << x << ',' << y << std::endl;
-    grid.addCell(x, y);
-    if (c < 1)
-        return; // EXIT: Don't add components
+    std::shared_ptr<GridCell> cell;
+    if (c == 0) {
+        // Add default cell
+        cell = grid.addCell(x, y);
+    } else {
+        // Add cell with a FirstComponent
+        auto cellTemplate = std::make_shared<GridCell>(0, 0);
+        cellTemplate->addComponent(std::make_shared<FirstComponent>());
+        cell = grid.addCell(x, y, cellTemplate);
+        if (cell && !cell->getComponent<FirstComponent>()) {
+            std::cout << "Failed to retrieve FirstComponent from " << x << ',' << y << std::endl;
+        }
+    }
 
-    auto cell = grid.getCell(x, y);
+    if (cell)
+        std::cout << "addCell() added cell at (" << cell->x() << ',' << cell->y() << ')' << std::endl;
+    else
+        std::cout << "addCell() failed to add cell at (" << x << ',' << y << ')' << std::endl;
+
+    cell = grid.getCell(x, y);
     if (!cell) {
         std::cout << "Failed to get cell at " << x << ',' << y << std::endl;
-    }
-    std::cout << "addCell() added cell at (" << cell->x() << ',' << cell->y() << ')' << std::endl;
-
-    cell->addComponent(std::make_shared<FirstComponent>());
-    if (!cell->getComponent<FirstComponent>()) {
-        std::cout << "Failed to retrieve FirstComponent from " << x << ',' << y << std::endl;
     }
 
     if (c < 2)
         return;
 
-    static std::shared_ptr<SecondComponent> secondComponent = std::make_shared<SecondComponent>();
+    // Try to add one or more of SecondComponent after creation
     // Only one of each type of component is allowed, so any number of loops c > 2 are expected to be ineffective
     for (int i = 1; i < c; ++i) {
         std::shared_ptr<SecondComponent> newComponent = std::make_shared<SecondComponent>();
@@ -78,20 +86,25 @@ int main(int argc, char *argv[])
     GameGrid grid(true);
     printGrid(grid);
 
-    addCell(2, -2, grid, 2);
+    // Add new cells orthogonally
+    addCell(1, 0, grid, 1);
+    addCell(-1,0, grid, 1);
+    addCell(0, 1, grid, 1);
+    addCell(0,-1, grid, 1);
     printGrid(grid);
 
-    addCell(-2, 2, grid, 2);
+    // Add new cells diagonally
+    addCell(3, 4, grid, 3);
+    addCell(-3,-4,grid, 3);
+    addCell(-5,6, grid, 0);
+    addCell(5,-6, grid, 0);
     printGrid(grid);
 
-    addCell(1, 1, grid);
-    addCell(-1, -1, grid);
-    printGrid(grid);
-
-    addCell(3, 4, grid, 0);
-    printGrid(grid);
-
-    addCell(-5, -6, grid, 3);
+    // Add cells within our bounds
+    addCell(2, 1, grid, 2);
+    addCell(-2,-1,grid, 2);
+    addCell(-1,2, grid, 2);
+    addCell(1,-2, grid, 2);
     printGrid(grid);
 
     return 0;

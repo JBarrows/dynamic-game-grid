@@ -20,8 +20,8 @@ public:
     int minY() const;
     int maxY() const;
 
-    void addCell(int x, int y, const std::shared_ptr<GridCell> value);
-    void addCell(int x, int y);
+    std::shared_ptr<GridCell> addCell(int x, int y, const std::shared_ptr<GridCell> value);
+    std::shared_ptr<GridCell> addCell(int x, int y);
 
     std::shared_ptr<GridCell> getCell(int x, int y) const;
 
@@ -34,10 +34,16 @@ private:
     void setWidth(int newWidth);
     void setHeight(int newHeight);
     void appendColumn();
+    std::shared_ptr<GridCell> appendColumn(std::shared_ptr<GridCell> cell, int targetY);
     void prependColumn();
-    void appendRow();
-    void prependRow();
+    std::shared_ptr<GridCell> prependColumn(std::shared_ptr<GridCell> cell, int targetY);
+
     std::shared_ptr<CellRow> buildRow(int y);
+    std::shared_ptr<CellRow> buildRow(std::shared_ptr<GridCell> cell, int targetX, int y, std::shared_ptr<GridCell> &newCell);
+    void appendRow();
+    std::shared_ptr<GridCell> appendRow(std::shared_ptr<GridCell> cell, int targetX);
+    void prependRow();
+    std::shared_ptr<GridCell> prependRow(std::shared_ptr<GridCell> cell, int targetX);
 
     bool m_allowEmptyCells;
     int m_width, m_height;
