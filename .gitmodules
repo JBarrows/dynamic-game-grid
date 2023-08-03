@@ -1,0 +1,3 @@
+[submodule "grid-sweeper"]
+	path = grid-sweeper
+	url = https://github.com/JBarrows/grid-sweeper.git
